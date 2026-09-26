@@ -11,10 +11,10 @@ EXACT = {
     "common.py", "tools_search.py", "mcp_server.py",
     "fts_index.py", "rate_limit.py", "app/index.html", "app/package.json",
     "app/pnpm-lock.yaml", "app/pnpm-workspace.yaml", "app/tsconfig.json",
-    "app/vite.config.ts", "app/public/gemesislogo.jpg",
+    "app/vite.config.ts", "app/playwright.config.ts", "app/public/gemesislogo.jpg",
 }
 PREFIXES = ("app/src/", "app/tests/", "demo/", "scripts/", "tests/")
-SKIP_DIRS = {".git", "node_modules", "dist", ".venv", "__pycache__", ".pytest_cache"}
+SKIP_DIRS = {".git", "node_modules", "dist", "test-results", "playwright-report", ".venv", "__pycache__", ".pytest_cache"}
 PRIVATE_DIRS = {"media", "backups", "logs"}
 # Split sensitive signatures so this scanner itself can be scanned as text.
 FORBIDDEN = {

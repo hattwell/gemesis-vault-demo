@@ -11,6 +11,28 @@ from fts_index import ensure_fts
 
 AUTHORS = ("Ника Искра", "Лев Маяк", "Мира Ветер", "Оля Луч", "Ян Орбит")
 TOPICS = ("Навигация", "Заметки", "Поиск", "Мастерская")
+RESOURCE_CARDS = (
+    ("Аэролит 01", "Собирает карты маршрутов из связанных карточек."),
+    ("Аэролит 02", "Сохраняет ход исследования в коротких заметках."),
+    ("Сигналяр", "Подсвечивает повторяющиеся идеи в длинном обсуждении."),
+    ("Картолист", "Раскладывает заметки по соседним темам и авторам."),
+    ("Аэролит 05", "Показывает, как заметки становятся наглядной картой."),
+    ("Тихолёт", "Помогает найти отправную точку для новой темы."),
+    ("Лучеполис", "Сравнивает версии одной идеи на временной шкале."),
+    ("Схемотека", "Хранит эскизы и шаги вымышленного прототипа."),
+    ("Северок", "Предлагает путь от вопроса к связанному ресурсу."),
+    ("Листократ", "Объединяет небольшие находки в обзор дня."),
+    ("Текстоход", "Сверяет термины между несколькими заметками."),
+    ("Отметолог", "Отмечает места, к которым стоит вернуться позже."),
+    ("Нитесвод", "Соединяет цитаты разных вымышленных участников."),
+    ("Камертон", "Помогает увидеть общие слова у разных тем."),
+    ("Мнемосад", "Превращает краткие записи в план работы."),
+    ("Шкала", "Расставляет находки от обзорных до подробных."),
+    ("Путевод", "Показывает связи между картами и исследованиями."),
+    ("Светосбор", "Собирает подборку примеров в одном месте."),
+    ("Следометр", "Помогает проследить путь идеи между сообщениями."),
+    ("Квадрант", "Раскладывает материалы по четырём учебным направлениям."),
+)
 
 
 def build_demo_database(path: Path) -> None:
@@ -38,15 +60,15 @@ def build_demo_database(path: Path) -> None:
             """)
             links = [f"https://aerolith-{number:02d}.example/guide" for number in range(1, 21)]
             for index, url in enumerate(links):
-                label = f"Аэролит {index + 1:02d}"
+                label, purpose = RESOURCE_CARDS[index]
                 topic = TOPICS[index % len(TOPICS)]
                 con.execute(
                     "INSERT INTO resources (key,title,folder,url,description,web_title,web_desc,kind,topics,facets,display_name,useless) "
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,0)",
                     (
                         "url:" + url.lower(), label, "Веб", url,
-                        f"Вымышленный справочник {label} для темы {topic.lower()}.",
-                        label, f"Демо-ресурс о теме {topic.lower()}.", "Веб",
+                        f"Демо-проект «{label}»: {purpose}",
+                        label, f"{purpose} Тема: {topic.lower()}.", "Веб",
                         json.dumps([topic], ensure_ascii=False),
                         json.dumps(["вымышленное", "демо"], ensure_ascii=False), label,
                     ),
@@ -55,6 +77,7 @@ def build_demo_database(path: Path) -> None:
             for number in range(1, 101):
                 index = (number - 1) % len(links)
                 topic = TOPICS[index % len(TOPICS)]
+                label, purpose = RESOURCE_CARDS[index]
                 urls = [links[index]]
                 if number % 5 == 0:
                     urls.append(links[(index + 1) % len(links)])
@@ -64,8 +87,8 @@ def build_demo_database(path: Path) -> None:
                     (
                         number, (start + timedelta(days=(number - 1) % 7)).isoformat(),
                         AUTHORS[(number - 1) % len(AUTHORS)],
-                        f"Обсуждаем вымышленный аэролит {index + 1:02d}: {topic.lower()}, "
-                        "заметки и поиск. Это только демонстрационное сообщение.",
+                        f"В вымышленном обсуждении проекта «Аэролит» сравниваем {label}: "
+                        f"{topic.lower()}. {purpose} Следующий шаг — связать эту находку с картой ресурсов.",
                         None, None, json.dumps(urls, ensure_ascii=False),
                     ),
                 )

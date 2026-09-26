@@ -7,8 +7,9 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from common import DB_PATH, collect_resources, resource_display_name, row_get
@@ -132,9 +133,23 @@ def api_chat(req: ChatRequest, request: Request):
     return scripted_answer(req.messages[-1].content)
 
 
+DIST = Path(__file__).resolve().parents[1] / "app" / "dist"
+
+
 @app.get("/")
 def landing():
-    return HTMLResponse("<h1>Gemesis Vault Demo</h1><p>Frontend build is not installed yet.</p>", status_code=503)
+    if not (DIST / "index.html").is_file():
+        return HTMLResponse("<h1>Gemesis Vault Demo</h1><p>Frontend build is not installed yet.</p>", status_code=503)
+    return FileResponse(DIST / "index.html")
 
 
+@app.get("/gemesislogo.jpg")
+def logo():
+    if not (DIST / "gemesislogo.jpg").is_file():
+        raise HTTPException(404, "demo asset unavailable")
+    return FileResponse(DIST / "gemesislogo.jpg")
+
+
+if (DIST / "assets").is_dir():
+    app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 app.mount("/mcp", mcp_asgi)

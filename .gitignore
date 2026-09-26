@@ -5,6 +5,8 @@
 *.session-*
 node_modules/
 app/dist/
+app/test-results/
+app/playwright-report/
 __pycache__/
 .pytest_cache/
 .venv/

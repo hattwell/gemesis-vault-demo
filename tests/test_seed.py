@@ -31,6 +31,18 @@ class SyntheticCorpusTests(unittest.TestCase):
                 self.assertTrue(all(url.startswith("https://") and ".example/" in url for url in json.loads(urls)))
             con.close()
 
+    def test_fictional_resources_have_distinct_human_readable_cards(self):
+        from demo.seed import build_demo_database
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "fictional.db"
+            build_demo_database(path)
+            con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+            cards = con.execute("SELECT display_name, description FROM resources ORDER BY key").fetchall()
+            con.close()
+            self.assertGreaterEqual(sum(not name.startswith("Аэролит ") for name, _ in cards), 15)
+            self.assertTrue(all(description and "Вымышленный справочник" not in description for _, description in cards))
+
     def test_seed_never_overwrites_an_existing_database(self):
         self.assertTrue((ROOT / "demo/seed.py").is_file(), "missing synthetic seed generator")
         from demo.seed import build_demo_database
