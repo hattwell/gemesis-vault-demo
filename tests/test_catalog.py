@@ -45,6 +45,29 @@ print(json.dumps({"graph": build_graph(DB_PATH), "digest": build_digest(DB_PATH)
             self.assertFalse(Path(str(path) + "-journal").exists())
             self.assertFalse(Path(str(path) + "-wal").exists())
 
+    def test_mcp_rejects_oversized_searches_before_sql(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "fake.db"
+            build_demo_database(path)
+            code = '''
+from mcp_server import search_messages, search_resources, get_resource, top_resources
+for operation in (
+    lambda: search_messages('x'*121),
+    lambda: search_resources('x'*121),
+    lambda: get_resource('url:' + 'x'*201),
+    lambda: top_resources(limit=-1),
+):
+    try:
+        operation()
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('unbounded MCP argument accepted')
+'''
+            result = subprocess.run([sys.executable, "-c", code], cwd=ROOT,
+                                    env=dict(os.environ, DEMO_DB_PATH=str(path)), capture_output=True)
+            self.assertEqual(result.returncode, 0, "MCP must enforce bounded inputs")
+
     def test_five_tools_find_only_fictional_resources(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "fake.db"

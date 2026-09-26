@@ -24,10 +24,16 @@ def _db() -> sqlite3.Connection:
     return con
 
 
+def _bounded(value: str, maximum: int = 120) -> str:
+    if not isinstance(value, str) or len(value) > maximum:
+        raise ValueError("demo search argument exceeds limit")
+    return value
+
+
 @mcp.tool()
 def search_messages(query: str) -> str:
     """Полнотекстовый поиск по вымышленным сообщениям: до 15 датированных цитат."""
-    return json.dumps(cmd_search(query), ensure_ascii=False, indent=1)
+    return json.dumps(cmd_search(_bounded(query)), ensure_ascii=False, indent=1)
 
 
 @mcp.tool()
@@ -39,7 +45,8 @@ def search_resources(
 ) -> str:
     """Поиск ресурсов по тексту и строгим фильтрам topic, kind и facet."""
     return json.dumps(
-        cmd_resources(query, topic=topic, kind=kind, facet=facet),
+        cmd_resources(_bounded(query), topic=_bounded(topic, 60), kind=_bounded(kind, 60),
+                      facet=_bounded(facet, 60)),
         ensure_ascii=False,
         indent=1,
     )
@@ -48,7 +55,7 @@ def search_resources(
 @mcp.tool()
 def get_resource(key: str) -> str:
     """Детали вымышленного ресурса по key: URL .example, описание и цитаты."""
-    return json.dumps(cmd_resource(key), ensure_ascii=False, indent=1)
+    return json.dumps(cmd_resource(_bounded(key, 200)), ensure_ascii=False, indent=1)
 
 
 @mcp.tool()
@@ -75,6 +82,11 @@ def top_resources(
     limit: int = 15,
 ) -> str:
     """Самые обсуждаемые ресурсы с опциональными фильтрами topic, kind и facet."""
+    _bounded(topic, 60)
+    _bounded(kind, 60)
+    _bounded(facet, 60)
+    if not isinstance(limit, int) or not 1 <= limit <= 40:
+        raise ValueError("demo result limit outside 1..40")
     con = _db()
     resources, _, _ = collect_resources(con)
     metadata = {
