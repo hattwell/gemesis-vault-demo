@@ -4,7 +4,9 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import subprocess
+import zlib
 
+SCREENSHOTS = {f"screenshots/{name}.png" for name in ("overview", "catalog", "graph", "chat")}
 EXACT = {
     ".gitignore", ".dockerignore", "Dockerfile", "README.md", "render.yaml",
     "requirements-demo.txt", ".github/workflows/checks.yml",
@@ -12,7 +14,7 @@ EXACT = {
     "fts_index.py", "rate_limit.py", "app/index.html", "app/package.json",
     "app/pnpm-lock.yaml", "app/pnpm-workspace.yaml", "app/tsconfig.json",
     "app/vite.config.ts", "app/playwright.config.ts", "app/public/gemesislogo.jpg",
-}
+} | SCREENSHOTS
 PREFIXES = ("app/src/", "app/tests/", "demo/", "scripts/", "tests/")
 SKIP_DIRS = {".git", "node_modules", "dist", "test-results", "playwright-report", ".venv", "__pycache__", ".pytest_cache"}
 PRIVATE_DIRS = {"media", "backups", "logs"}
@@ -36,6 +38,37 @@ def private_name(path: Path) -> bool:
         or ".db-" in name or ".session-" in name
         or any(part in PRIVATE_DIRS for part in path.parts)
     )
+
+
+def valid_screenshot(data: bytes) -> bool:
+    """Allow only well-formed PNG pixels, never EXIF or textual ancillary chunks."""
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return False
+    offset, types = 8, []
+    while offset + 12 <= len(data):
+        size = int.from_bytes(data[offset:offset + 4], "big")
+        end = offset + 12 + size
+        if end > len(data) or size > 2_000_000:
+            return False
+        kind = data[offset + 4:offset + 8]
+        if kind not in {b"IHDR", b"IDAT", b"IEND"}:
+            return False
+        if zlib.crc32(data[offset + 4:offset + 8 + size]) & 0xffffffff != int.from_bytes(data[offset + 8 + size:end], "big"):
+            return False
+        if kind == b"IHDR":
+            if types or size != 13:
+                return False
+            width = int.from_bytes(data[offset + 8:offset + 12], "big")
+            height = int.from_bytes(data[offset + 12:offset + 16], "big")
+            if not (600 <= width <= 2560 and 400 <= height <= 1600):
+                return False
+        if kind == b"IDAT" and (not types or types[0] != b"IHDR"):
+            return False
+        if kind == b"IEND":
+            return size == 0 and types[0] == b"IHDR" and b"IDAT" in types and end == len(data)
+        types.append(kind)
+        offset = end
+    return False
 
 
 def check_repo(root: Path) -> dict[str, list[str]]:
@@ -74,6 +107,10 @@ def check_repo(root: Path) -> dict[str, list[str]]:
             record(relative, "oversized-file")
             continue
         if name == "app/public/gemesislogo.jpg":
+            continue
+        if name in SCREENSHOTS:
+            if not valid_screenshot(path.read_bytes()):
+                record(relative, "screenshot-format-or-metadata")
             continue
         try:
             content = path.read_text("utf-8")

@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 import subprocess
 
-from scripts.check_public_artifact import EXACT, FORBIDDEN, PREFIXES, private_name
+from scripts.check_public_artifact import EXACT, FORBIDDEN, PREFIXES, SCREENSHOTS, private_name, valid_screenshot
 
 
 def check_history(root: Path) -> list[tuple[str, str, str]]:
@@ -24,6 +24,10 @@ def check_history(root: Path) -> list[tuple[str, str, str]]:
                 problems.append((short, path, "oversized"))
                 continue
             if path == "app/public/gemesislogo.jpg":
+                continue
+            if path in SCREENSHOTS:
+                if not valid_screenshot(contents):
+                    problems.append((short, path, "screenshot-format-or-metadata"))
                 continue
             try:
                 text = contents.decode("utf-8")
