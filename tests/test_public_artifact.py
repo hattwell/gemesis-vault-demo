@@ -1,4 +1,5 @@
 """Fail-closed checks before any demo source can be published."""
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -42,13 +43,20 @@ class PublicArtifactTests(unittest.TestCase):
                 candidate.parent.rmdir()
                 candidate.parent.parent.rmdir()
 
+    def test_entire_new_history_contains_no_private_paths_or_hostnames(self):
+        from scripts.check_history import check_history
+        self.assertEqual(check_history(ROOT), [], "older demo commits must also be clean")
+
     def test_commit_uses_public_noreply_identity(self):
         email = subprocess.check_output(["git", "log", "-1", "--format=%ae"], cwd=ROOT, text=True).strip()
         self.assertTrue(email.endswith("@users.noreply.github.com"), "commit must not publish local machine identity")
 
     def test_demo_has_no_private_repository_remote(self):
-        remotes = subprocess.check_output(["git", "remote"], cwd=ROOT, text=True)
-        self.assertEqual(remotes.strip(), "")
+        remotes = subprocess.check_output(["git", "remote"], cwd=ROOT, text=True).splitlines()
+        allowed = re.compile(r"(?:https://github\.com/|git@github\.com:|ssh://git@github\.com/)hattwell/gemesis-vault-demo(?:\.git)?")
+        for remote in remotes:
+            url = subprocess.check_output(["git", "remote", "get-url", remote], cwd=ROOT, text=True).strip()
+            self.assertTrue(allowed.fullmatch(url), "unexpected remote; private source must never be linked")
 
 
 if __name__ == "__main__":

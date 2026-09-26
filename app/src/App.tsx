@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import McpPage from "./McpPage";
+import GraphView from "./GraphView";
 import OverviewPage, { type WeeklyDigest } from "./OverviewPage";
 import UpdatesPanel, { type UpdateEntry } from "./UpdatesPanel";
 
@@ -300,6 +301,7 @@ function RichText({
 export default function App() {
   const [data, setData] = useState<{ nodes: GNode[]; links: GLink[] } | null>(null);
   const [collection, setCollection] = useState<Collection>({ type: "all" });
+  const [catalogMode, setCatalogMode] = useState<"cards" | "graph">("cards");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<GNode | null>(null);
   const [resourceDetail, setResourceDetail] = useState<ResourceDetail | null>(null);
@@ -642,7 +644,7 @@ export default function App() {
           onOpenResource={openDigestResource}
         />
       ) : view === "catalog" ? (
-      <div className={`columns${selected ? " detail-open" : ""}`}>
+      <div className={`columns${selected ? " detail-open" : ""}${catalogMode === "graph" ? " graph-open" : ""}`}>
         {/* ---------- сайдбар ---------- */}
         <nav className="sidebar">
           <button
@@ -752,8 +754,18 @@ export default function App() {
           <div className="cards-head">
             <h1>{collTitle}</h1>
             <span className="count">{cards.length}</span>
+            <div className="catalog-view-switch" role="group" aria-label="Вид каталога">
+              <button type="button" aria-pressed={catalogMode === "cards"} onClick={() => setCatalogMode("cards")}>Карточки</button>
+              <button type="button" aria-pressed={catalogMode === "graph"} onClick={() => setCatalogMode("graph")}>Граф</button>
+            </div>
           </div>
-          <div className="cards">
+          <div className="catalog-examples" aria-label="Примеры поиска">
+            <span>Попробуйте поиск:</span>
+            {["Сигналяр", "Навигация", "Нитесвод"].map((example) => (
+              <button key={example} type="button" aria-label={`Пример: ${example}`} onClick={() => setQuery(example)}>{example}</button>
+            ))}
+          </div>
+          {catalogMode === "cards" ? <div className="cards">
             {cards.map((n) => (
               <article
                 key={n.id}
@@ -809,7 +821,8 @@ export default function App() {
               </article>
             ))}
             {cards.length === 0 && <div className="empty">Ничего не найдено</div>}
-          </div>
+          </div> : <GraphView nodes={cards} links={data?.links ?? []} selectedId={selected?.id}
+            onOpen={(id) => { const node = resources.find((item) => item.id === id); if (node) selectNode(node); }} />}
         </main>
 
         {/* ---------- правая колонка: детали ресурса ---------- */}

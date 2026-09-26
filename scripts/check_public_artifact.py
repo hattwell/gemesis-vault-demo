@@ -24,6 +24,8 @@ FORBIDDEN = {
     "production-ip": "89.208." + "113.89",
     "real-telegram-url": "https://t." + "me/",
     "production-env-value": "MCP_TOKEN" + "=",
+    "personal-home-path": "/Users/" + "hattwell/",
+    "private-server-path": "/opt/" + "gemesis/",
 }
 
 

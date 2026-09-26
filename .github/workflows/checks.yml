@@ -1,0 +1,60 @@
+name: Public demo checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.24.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - name: Inspect publishable artifact and full Git history
+        run: |
+          python -m scripts.check_public_artifact
+          python -m scripts.check_history
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements-demo.txt pip-audit==2.9.0
+      - name: Audit Python runtime
+        run: python -m pip check && python -m pip_audit -r requirements-demo.txt
+      - name: Build frontend and audit runtime JS
+        run: |
+          pnpm --dir app install --frozen-lockfile
+          pnpm --dir app exec tsc --noEmit
+          pnpm --dir app audit --audit-level high
+          pnpm --dir app build
+      - name: Run Python and security contract tests
+        run: python -m unittest discover -s tests -q
+      - name: Install test browser and run responsive smoke
+        working-directory: app
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec playwright test --reporter=line
+      - name: Build isolated Docker image
+        run: docker build --tag gemesis-demo:ci .
+      - name: Inspect image and smoke HTTP/MCP
+        run: |
+          python -m scripts.check_image gemesis-demo:ci
+          docker run --detach --rm --name gemesis-demo-ci --publish 127.0.0.1:18765:10000 --env PORT=10000 gemesis-demo:ci
+          for i in $(seq 1 40); do if curl --silent --fail --output /dev/null http://127.0.0.1:18765/api/features; then break; fi; sleep 1; done
+          python -m scripts.smoke_container http://127.0.0.1:18765
+          docker stop gemesis-demo-ci
