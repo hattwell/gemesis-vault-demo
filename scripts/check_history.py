@@ -6,6 +6,9 @@ import subprocess
 
 from scripts.check_public_artifact import EXACT, FORBIDDEN, PREFIXES, SCREENSHOTS, private_name, valid_screenshot
 
+# The already-published demo history contains a reviewed screenshot of the retired view.
+HISTORICAL_SCREENSHOTS = SCREENSHOTS | {"screenshots/graph.png"}
+
 
 def check_history(root: Path) -> list[tuple[str, str, str]]:
     problems: list[tuple[str, str, str]] = []
@@ -15,7 +18,7 @@ def check_history(root: Path) -> list[tuple[str, str, str]]:
         paths = subprocess.check_output(["git", "ls-tree", "-rz", "--name-only", commit], cwd=root).split(b"\0")
         for item in filter(None, paths):
             path = item.decode("utf-8")
-            if path not in EXACT and not path.startswith(PREFIXES):
+            if path not in EXACT and path not in HISTORICAL_SCREENSHOTS and not path.startswith(PREFIXES):
                 problems.append((short, path, "not-allowlisted"))
             if private_name(Path(path)):
                 problems.append((short, path, "private-name"))
@@ -25,7 +28,7 @@ def check_history(root: Path) -> list[tuple[str, str, str]]:
                 continue
             if path == "app/public/gemesislogo.jpg":
                 continue
-            if path in SCREENSHOTS:
+            if path in HISTORICAL_SCREENSHOTS:
                 if not valid_screenshot(contents):
                     problems.append((short, path, "screenshot-format-or-metadata"))
                 continue

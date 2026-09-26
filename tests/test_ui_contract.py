@@ -14,6 +14,8 @@ class UiContractTests(unittest.TestCase):
         self.assertIn("Сценарный чат", source)
         self.assertNotIn("/api/chat/feedback", source)
         self.assertNotIn("Telegram", source)
+        self.assertTrue("GraphView" not in source, "obsolete graph component remains")
+        self.assertTrue("catalogMode" not in source, "obsolete view switch remains")
         self.assertNotIn("Ассистент группы", source)
         self.assertNotIn("истории группы", source)
         self.assertNotIn("/admin", source)

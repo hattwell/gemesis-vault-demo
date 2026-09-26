@@ -28,18 +28,23 @@ test("fictional catalogue, search, references and scripted chat work without ext
   expect(errors).toEqual([]);
 });
 
-test("interactive relationship graph opens a fictional resource", async ({ page }) => {
+test("catalogue has resource cards without the obsolete cards/graph view switch", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("navigation", { name: "Разделы Vault" }).getByRole("button", { name: "Каталог" }).click();
-  await page.getByRole("button", { name: "Граф", exact: true }).click();
-  const graph = page.locator(".resource-graph");
-  await expect(graph).toBeVisible();
-  await expect(graph.locator("[data-resource-node]")).toHaveCount(20);
-  expect(await graph.locator(".graph-link-topic").count()).toBeGreaterThan(0);
-  await graph.getByRole("button", { name: "Открыть Аэролит 01" }).click();
+  await expect(page.locator(".card-open")).toHaveCount(20);
+  await expect(page.locator(".catalog-view-switch")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Граф", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Карточки", exact: true })).toHaveCount(0);
+  await expect(page.locator(".resource-graph")).toHaveCount(0);
+  if (page.viewportSize()!.width <= 640) {
+    const card = await page.locator(".card").first().boundingBox();
+    expect(card).not.toBeNull();
+    expect(card!.x + card!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+    expect(card!.width).toBeGreaterThan(page.viewportSize()!.width * 0.8);
+  }
+  await page.locator(".card-open").first().click();
   await expect(page.locator(".detail")).toContainText("Аэролит 01");
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
-  expect(overflow).toBe(false);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
 });
 
 test("MCP setup describes only public read-only access", async ({ page, request }) => {

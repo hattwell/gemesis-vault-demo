@@ -1,12 +1,12 @@
 # Gemesis Vault — карта знаний / knowledge map
 
-**Интерактивное публичное демо:** превращает сообщения и ссылки в каталог ресурсов, сводку и граф связей. Можно искать, открывать упоминания, исследовать граф и подключить MCP. **Все данные вымышлены.**
+**Интерактивное публичное демо:** превращает сообщения и ссылки в каталог ресурсов и сводку. Можно искать, фильтровать карточки, открывать упоминания и подключить MCP. **Все данные вымышлены.**
 
-**Interactive public demo:** explore a knowledge catalogue, weekly digest, resource graph, searchable mentions and read-only MCP. **Every person, message and resource is fictional.**
+**Interactive public demo:** explore a knowledge catalogue, weekly digest, resource cards, searchable mentions and read-only MCP. **Every person, message and resource is fictional.**
 
 **[Открыть демо / Open the live demo ↗](https://gemesis-vault-demo.onrender.com/)** · Render Free: после простоя запуск может занять около минуты / waking after inactivity may take about a minute.
 
-> **Демо · вымышленные данные / Fictional data only.** Это отдельное приложение, не подключённое к закрытому Gemesis Vault, рабочей базе или VPS. Чат показывает **сценарные ответы без генерации ИИ / scripted replies, not AI**. У демо нет админки, записи, регистрации или настоящих внешних ссылок: адреса `.example` — только примеры.
+> **Полная версия / Full product:** ИИ-чат генерирует ответы на вопросы по базе знаний / an AI chat generates answers using the knowledge base. **Публичное демо / Public demo:** отдельное приложение с вымышленными данными и **сценарным чатом без генерации ИИ / scripted replies, no AI calls**. Оно не подключено к закрытой базе или VPS. Здесь нет админки, записи, регистрации или настоящих внешних ссылок: адреса `.example` — только примеры.
 
 ## Что можно попробовать / Explore
 
@@ -14,7 +14,6 @@
 | --- | --- |
 | **Обзор / Digest** | Сводка за фиксированную демонстрационную неделю: 100 сообщений, 20 ресурсов, 5 вымышленных авторов. / A fixed fictional week with trends and discoveries. |
 | **Каталог / Catalogue** | Поиск по названиям и описаниям, фильтры по темам и авторам, карточки с контекстом упоминаний. / Search and filter resources, then open their mention history. |
-| **Граф / Graph** | Интерактивные связи ресурсов с темами и друг с другом; узел открывает карточку. / Explore topic and co-mention edges; click a node for details. |
 | **MCP + FTS5** | Пять реальных read-only инструментов, включая полнотекстовый поиск по вымышленным сообщениям. / Five working read-only tools, including message full-text search. |
 | **Демо-чат / Scripted chat** | Подготовленные ответы на три темы со ссылками на карточки; другие вопросы получают честную подсказку. / Three scripted topics with citations and an explicit fallback. |
 
@@ -26,9 +25,9 @@
 | --- | --- |
 | [![Сводка Gemesis с вымышленными данными / Fictional weekly digest](screenshots/overview.png)](screenshots/overview.png) | [![Каталог и карточка вымышленного ресурса / Fictional resource catalogue](screenshots/catalog.png)](screenshots/catalog.png) |
 
-| Граф связей / Relationship graph | Сценарный чат / Scripted chat |
-| --- | --- |
-| [![Граф тем и вымышленных ресурсов / Graph of fictional topics and resources](screenshots/graph.png)](screenshots/graph.png) | [![Явно обозначенный сценарный ответ / Clearly labeled scripted reply](screenshots/chat.png)](screenshots/chat.png) |
+**Сценарный чат / Scripted chat** — ответы помечены как подготовленные, а ссылки открывают вымышленные карточки. / Replies are clearly marked as scripted and cite fictional resource cards.
+
+<a href="screenshots/chat.png"><img src="screenshots/chat.png" width="720" alt="Явно обозначенный сценарный ответ / Clearly labeled scripted reply"></a>
 
 ## Как устроено / Architecture
 
@@ -39,7 +38,7 @@
                  ↓
    FastAPI (allowlisted HTTP + MCP)
          ↙                       ↘
- React/Vite: обзор, каталог, граф    5 read-only MCP tools
+ React/Vite: обзор, каталог          5 read-only MCP tools
          ↖                       ↙
     Сценарный чат / scripted responses
 ```
@@ -48,7 +47,7 @@
 - `demo/app.py` выдаёт только каталог, ресурс, сводку, обновления, демо-чат и MCP. Пользовательские запросы открывают SQLite в режиме **read-only**; никаких Telegram-сессий, внешней синхронизации или рабочей инфраструктуры.
 - `app/src/` — React-интерфейс. `Dockerfile` собирает фронтенд и запускает FastAPI непривилегированным пользователем; `.dockerignore` закрыт по умолчанию. `render.yaml` описывает ровно один **Render Free** web service без постоянного диска.
 
-**EN:** The seed produces the same ephemeral SQLite/FTS5 corpus on every boot. FastAPI serves an allowlisted HTTP API and five read-only MCP tools; React renders the catalogue, graph and digest. The Docker runtime contains only reviewed demo files. There is no connection to production, persistent user data or paid AI.
+**EN:** The seed produces the same ephemeral SQLite/FTS5 corpus on every boot. FastAPI serves an allowlisted HTTP API and five read-only MCP tools; React renders the catalogue and digest. The Docker runtime contains only reviewed demo files. There is no connection to production, persistent user data or paid AI in this public demo.
 
 ## Запуск / Run locally
 

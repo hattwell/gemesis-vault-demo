@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SHOTS = ("overview", "catalog", "graph", "chat")
+SHOTS = ("overview", "catalog", "chat")
 
 
 class PortfolioDocsTests(unittest.TestCase):
@@ -18,10 +18,14 @@ class PortfolioDocsTests(unittest.TestCase):
                 self.assertTrue(f"screenshots/{shot}.png" in text, f"missing screenshot reference: {shot}")
                 self.assertTrue((ROOT / f"screenshots/{shot}.png").is_file())
         self.assertNotIn("gemesis-vault" + ".duckdns.org", text)
+        self.assertNotIn("screenshots/graph.png", text)
+        self.assertNotIn("граф", text.casefold())
+        self.assertIn("ИИ-чат", text)
+        self.assertIn("AI chat", text)
         self.assertIn("https://gemesis-vault-demo.onrender.com/", text)
         self.assertIn("https://gemesis-vault-demo.onrender.com/mcp", text)
 
-    def test_only_four_reviewed_pngs_and_no_embedded_image_metadata(self):
+    def test_only_three_reviewed_pngs_and_no_embedded_image_metadata(self):
         self.assertEqual({path.name for path in (ROOT / "screenshots").iterdir()},
                          {f"{shot}.png" for shot in SHOTS})
         from scripts.check_public_artifact import valid_screenshot

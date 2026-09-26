@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import zlib
 
-SCREENSHOTS = {f"screenshots/{name}.png" for name in ("overview", "catalog", "graph", "chat")}
+SCREENSHOTS = {f"screenshots/{name}.png" for name in ("overview", "catalog", "chat")}
 EXACT = {
     ".gitignore", ".dockerignore", "Dockerfile", "README.md", "render.yaml",
     "requirements-demo.txt", ".github/workflows/checks.yml",
