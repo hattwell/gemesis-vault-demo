@@ -37,10 +37,21 @@ async def smoke(base: str) -> None:
                 assert {tool.name for tool in tools.tools} == {
                     "search_messages", "search_resources", "get_resource", "list_topics", "top_resources",
                 }
-                result = await session.call_tool("search_messages", {"query": "аэролит"})
-                assert not result.isError
-                assert json.loads(result.content[0].text)
-    print("Container smoke: catalogue, scripted chat, denied owner routes and five MCP tools OK.")
+                calls = (
+                    ("search_messages", {"query": "аэролит"}),
+                    ("search_resources", {"query": "аэролит"}),
+                    ("get_resource", {"key": "url:https://aerolith-01.example/guide"}),
+                    ("list_topics", {}),
+                    ("top_resources", {}),
+                )
+                for tool, arguments in calls:
+                    result = await session.call_tool(tool, arguments)
+                    assert not result.isError and result.content
+                    payload = json.loads(result.content[0].text)
+                    assert payload, f"empty fictional result: {tool}"
+                    if tool == "get_resource":
+                        assert payload["key"] == arguments["key"]
+    print("Demo smoke: catalogue, scripted chat, denied owner routes and all five MCP tools OK.")
 
 
 if __name__ == "__main__":

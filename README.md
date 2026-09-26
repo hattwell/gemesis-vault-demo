@@ -4,6 +4,8 @@
 
 **Interactive public demo:** explore a knowledge catalogue, weekly digest, resource graph, searchable mentions and read-only MCP. **Every person, message and resource is fictional.**
 
+**[Открыть демо / Open the live demo ↗](https://gemesis-vault-demo.onrender.com/)** · Render Free: после простоя запуск может занять около минуты / waking after inactivity may take about a minute.
+
 > **Демо · вымышленные данные / Fictional data only.** Это отдельное приложение, не подключённое к закрытому Gemesis Vault, рабочей базе или VPS. Чат показывает **сценарные ответы без генерации ИИ / scripted replies, not AI**. У демо нет админки, записи, регистрации или настоящих внешних ссылок: адреса `.example` — только примеры.
 
 ## Что можно попробовать / Explore
@@ -66,7 +68,7 @@ Or: `docker build -t gemesis-demo . && docker run --rm -p 8000:10000 -e PORT=100
 
 `search_messages`, `search_resources`, `get_resource`, `list_topics`, `top_resources` работают на том же вымышленном наборе данных. / All five tools query the same fictional corpus.
 
-Local endpoint: `http://127.0.0.1:8000/mcp`. Public **demo-only** bearer: `demo-readonly` (not an owner key or a secret). The MCP tab supplies client-specific setup commands. Requests are size- and rate-limited; do not send private questions or credentials to a public demo.
+Local endpoint: `http://127.0.0.1:8000/mcp`; hosted endpoint: `https://gemesis-vault-demo.onrender.com/mcp`. Public **demo-only** bearer: `demo-readonly` (not an owner key or a secret). The MCP tab supplies client-specific setup commands. Requests are size- and rate-limited; do not send private questions or credentials to a public demo.
 
 ## Проверки и ограничения / Verification & limits
 
