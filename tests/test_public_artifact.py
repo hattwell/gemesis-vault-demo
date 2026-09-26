@@ -42,6 +42,10 @@ class PublicArtifactTests(unittest.TestCase):
                 candidate.parent.rmdir()
                 candidate.parent.parent.rmdir()
 
+    def test_commit_uses_public_noreply_identity(self):
+        email = subprocess.check_output(["git", "log", "-1", "--format=%ae"], cwd=ROOT, text=True).strip()
+        self.assertTrue(email.endswith("@users.noreply.github.com"), "commit must not publish local machine identity")
+
     def test_demo_has_no_private_repository_remote(self):
         remotes = subprocess.check_output(["git", "remote"], cwd=ROOT, text=True)
         self.assertEqual(remotes.strip(), "")
